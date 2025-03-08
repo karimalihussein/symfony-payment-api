@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Service\PaymentProcessor;
+use App\DTO\PaymentRequestDTO;
 use App\Exception\InvalidGatewayException;
 use App\Exception\PaymentProcessingException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -10,7 +11,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-use Symfony\Component\Validator\Constraints as Assert;
 use Psr\Log\LoggerInterface;
 
 #[Route('/api/payment')]
@@ -26,20 +26,20 @@ class PaymentController extends AbstractController
     public function processPayment(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
+        $paymentRequest = new PaymentRequestDTO($data);
 
-        // Validate user input
-        $errors = $this->validateInput($data);
+        // Validate the DTO
+        $errors = $this->validateRequest($paymentRequest);
         if (!empty($errors)) {
             return $this->json(['status' => 'error', 'errors' => $errors], JsonResponse::HTTP_BAD_REQUEST);
         }
 
-
         try {
             $response = $this->paymentProcessor->processPayment(
-                gatewayName: $data['gateway'],
-                amount: (float) $data['amount'],
-                currency: strtoupper($data['currency'] ?? 'USD'),
-                cardDetails: $this->getCardDetails($data)
+                gatewayName: $paymentRequest->gateway,
+                amount: $paymentRequest->amount,
+                currency: $paymentRequest->currency,
+                cardDetails: $paymentRequest->getCardDetails()
             );
 
             return $this->json([
@@ -57,65 +57,19 @@ class PaymentController extends AbstractController
         }
     }
 
-    /**
-     * Validate user input before processing payment.
-     *
-     * @param array $data
-     * @return array|null
-     */
-    private function validateInput(array $data): ?array
+    private function validateRequest(PaymentRequestDTO $paymentRequest): array
     {
-        $constraints = new Assert\Collection([
-            'gateway' => new Assert\NotBlank(),
-            'amount' => [
-                new Assert\NotBlank(),
-                new Assert\Type(['type' => 'numeric', 'message' => 'Amount must be a number']),
-                new Assert\Positive(),
-            ],
-            'currency' => new Assert\Optional([
-                new Assert\Length(['min' => 3, 'max' => 3]),
-                new Assert\Regex('/^[A-Z]{3}$/')
-            ]),
-            'cardNumber' => new Assert\Optional([
-                new Assert\Length(['min' => 13, 'max' => 19]),
-                new Assert\Regex('/^\d+$/', 'Card number must be numeric')
-            ]),
-            'cardExpYear' => new Assert\Optional([
-                new Assert\Regex('/^\d{4}$/', 'Invalid expiration year format')
-            ]),
-            'cardExpMonth' => new Assert\Optional([
-                new Assert\Regex('/^\d{2}$/', 'Invalid expiration month format'),
-                new Assert\Range(['min' => 1, 'max' => 12])
-            ]),
-            'cardCvv' => new Assert\Optional([
-                new Assert\Regex('/^\d{3,4}$/', 'Invalid CVV format')
-            ]),
-        ]);
+        $violations = $this->validator->validate($paymentRequest);
 
-        $violations = $this->validator->validate($data, $constraints);
-        if (count($violations) > 0) {
-            $errors = [];
-            foreach ($violations as $violation) {
-                $errors[$violation->getPropertyPath()] = $violation->getMessage();
-            }
-            return $errors;
+        if (count($violations) === 0) {
+            return [];
         }
-        return null;
-    }
 
-    /**
-     * Extract card details from user input.
-     *
-     * @param array $data
-     * @return array
-     */
-    private function getCardDetails(array $data): array
-    {
-        return array_filter([
-            'number' => $data['cardNumber'] ?? null,
-            'expYear' => $data['cardExpYear'] ?? null,
-            'expMonth' => $data['cardExpMonth'] ?? null,
-            'cvc' => $data['cardCvv'] ?? null,
-        ]);
+        $errors = [];
+        foreach ($violations as $violation) {
+            $errors[$violation->getPropertyPath()] = $violation->getMessage();
+        }
+
+        return $errors;
     }
 }
