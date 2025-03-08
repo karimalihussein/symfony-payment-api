@@ -1,0 +1,15 @@
+services:
+  app:
+    container_name: symfony-payment-api
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+      - ./docker/apache-config.conf:/etc/apache2/sites-available/000-default.conf
+    environment:
+      - APACHE_RUN_USER=www-data
+      - APACHE_RUN_GROUP=www-data
+    restart: always
