@@ -1,112 +1,188 @@
-Here is your README.md file, well-formatted and structured for clarity and professionalism:
+# 🚀 Payment API Project
 
-⸻
+This project is a **Payment Processing API** built with **Symfony 6.4**, supporting multiple payment gateways like **ACI** and **Shift4**. It is designed to be modular, scalable, and easy to set up. The project is fully Dockerized for seamless installation and execution, but it can also be run locally without Docker. Additionally, it provides **console commands** for testing payment processing directly from the terminal.
 
-🚀 Payment API Project
+---
 
-This project is a Payment Processing API built with Symfony 6.4, supporting multiple payment gateways like ACI and Shift4.
-It is fully Dockerized, allowing seamless installation and execution without additional dependencies.
+## 🛠 Installation & Running the Project
 
-⸻
-
-🛠 Installation & Running the Project Using Docker
-
-Prerequisites
+### Prerequisites
 
 Ensure you have the following installed:
-• Docker 🐳
-• Docker Compose
 
-Steps to Run the Project
+- **For Docker Setup**:
+  - Docker 🐳
+  - Docker Compose
+- **For Non-Docker Setup**:
+  - PHP 8.1 or higher
+  - Composer
+  - Symfony CLI (optional but recommended)
 
-1️⃣ Clone the repository
+---
 
+### � **Running the Project Using Docker**
+
+#### Steps to Run the Project
+
+1️⃣ **Clone the repository**:
+
+```bash
 git clone https://github.com/karimalihussein/symfony-payment-api.git
 cd symfony-payment-api
+```
 
-2️⃣ Build and start the container
+2️⃣ **Build and start the container**:
 
+```bash
 docker-compose up -d --build
+```
 
-3️⃣ Verify that the containers are running
+3️⃣ **Verify that the containers are running**:
 
+```bash
 docker ps
+```
 
-4️⃣ Access the application
-• API Base URL: http://localhost:8080
+4️⃣ **Access the application**:
 
-⸻
+- API Base URL: [http://localhost:8080](http://localhost:8080)
 
-🔹 Available APIs
+---
 
-📌 Process Payment
-• Endpoint: /api/payment/process
-• Method: POST
-• Description: Processes a payment using a selected payment gateway (ACI, Shift4, etc.).
+### 🖥 **Running the Project Without Docker**
 
-✅ Request Body (JSON)
+#### Steps to Run the Project
 
+1️⃣ **Clone the repository**:
+
+```bash
+git clone https://github.com/karimalihussein/symfony-payment-api.git
+cd symfony-payment-api
+```
+
+2️⃣ **Install dependencies using Composer**:
+
+```bash
+composer install
+```
+
+3️⃣ **Start the Symfony local server**:
+
+```bash
+symfony serve
+```
+
+4️⃣ **Access the application**:
+
+- API Base URL: [http://localhost:8000](http://localhost:8000)
+
+---
+
+## 🔹 Available APIs
+
+### 📌 Process Payment
+
+- **Endpoint**: `/api/payment/process`
+- **Method**: `POST`
+- **Description**: Processes a payment using a selected payment gateway (ACI, Shift4, etc.).
+
+#### ✅ Request Body (JSON)
+
+```json
 {
-"gateway": "aci",
-"amount": 200,
-"currency": "USD",
-"cardNumber": "4111111111111111",
-"cardExpYear": "2025",
-"cardExpMonth": "12",
-"cardCvv": "123"
+  "gateway": "aci",
+  "amount": 200,
+  "currency": "USD",
+  "cardNumber": "4111111111111111",
+  "cardExpYear": "2025",
+  "cardExpMonth": "12",
+  "cardCvv": "123"
 }
+```
 
-⸻
+---
 
-📌 Execute Request Using cURL
+### 📌 Execute Request Using cURL
 
+```bash
 curl -X POST "http://localhost:8080/api/payment/process" \
  -H "Content-Type: application/json" \
  -d '{
-"gateway": "aci",
-"amount": 200,
-"currency": "USD",
-"cardNumber": "4111111111111111",
-"cardExpYear": "2025",
-"cardExpMonth": "12",
-"cardCvv": "123"
+  "gateway": "aci",
+  "amount": 200,
+  "currency": "USD",
+  "cardNumber": "4111111111111111",
+  "cardExpYear": "2025",
+  "cardExpMonth": "12",
+  "cardCvv": "123"
 }'
+```
 
-⸻
+---
 
-✅ Successful Response
+### ✅ Successful Response
 
+```json
 {
-"status": "success",
-"message": "Payment processed successfully",
-"data": {
-"transactionId": "txn_123456",
-"amount": 200,
-"currency": "USD"
+  "status": "success",
+  "message": "Payment processed successfully",
+  "data": {
+    "transactionId": "txn_123456",
+    "amount": 200,
+    "currency": "USD"
+  }
 }
-}
+```
 
-❌ Error Response
+### ❌ Error Response
 
+```json
 {
-"status": "error",
-"message": "Invalid input data"
+  "status": "error",
+  "message": "Invalid input data"
 }
+```
 
-⸻
+---
 
-🎯 Additional Notes
+## 🖥 Console Commands
 
-✔ Fully Dockerized – No additional dependencies are required.
-✔ No Database Needed – The API solely handles payment processing.
-✔ Modular & Scalable – Can be extended to support additional payment gateways.
+The project also provides **console commands** to process payments directly from the terminal. This is useful for testing and debugging.
 
-⸻
+### 📌 Process Payment via Command
 
-📩 Contact
+1️⃣ **Process Payment with ACI Gateway**:
 
-If you encounter any issues, feel free to reach out! 🚀💡
+```bash
+php bin/console app:process-payment aci 200
+```
 
-⸻
+2️⃣ **Process Payment with Shift4 Gateway**:
 
-Now, simply save this as README.md in your project directory. 🚀🔥
+```bash
+php bin/console app:process-payment shift4 450
+```
+
+#### Example Output:
+
+```bash
+Payment processed successfully!
+Gateway: aci
+Amount: 200
+Transaction ID: txn_123456
+```
+
+---
+
+## 🎯 Additional Notes
+
+- ✔ **Fully Dockerized** – No additional dependencies are required when using Docker.
+- ✔ **No Database Needed** – The API solely handles payment processing.
+- ✔ **Modular & Scalable** – Can be extended to support additional payment gateways.
+- ✔ **Console Commands** – Test payment processing directly from the terminal.
+
+---
+
+## 📩 Contact
+
+If you encounter any issues or have questions, feel free to reach out! 🚀💡
