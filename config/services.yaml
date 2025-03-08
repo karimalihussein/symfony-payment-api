@@ -1,18 +1,19 @@
-# This file is the entry point to configure your own services.
-# Files in the packages/ subdirectory configure your dependencies.
-
-# Put parameters here that don't need to change on each machine where the app is deployed
-# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
+# config/services.yaml
 parameters:
+    shift4.base_url: '%env(SHIFT4_BASE_URL)%'
+    shift4.api_key: '%env(SHIFT4_API_KEY)%'
+
+    # ACI Payment Gateway Parameters
+    aci.entity_id: '%env(ACI_ENTITY_ID)%'
+    aci.api_key: '%env(ACI_API_KEY)%'
 
 services:
-    # default configuration for services in *this* file
+    # Default settings for all services
     _defaults:
-        autowire: true      # Automatically injects dependencies in your services.
-        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+        autowire: true        # Automatically injects dependencies
+        autoconfigure: true   # Automatically registers services as commands, event subscribers, etc.
+        public: false         # Services are private by default
 
-    # makes classes in src/ available to be used as services
-    # this creates a service per class whose id is the fully-qualified class name
     App\:
         resource: '../src/'
         exclude:
@@ -20,5 +21,35 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
-    # add more service definitions when explicit configuration is needed
-    # please note that last definitions always *replace* previous ones
+    # Automatically tag all services implementing PaymentGatewayInterface
+    _instanceof:
+        App\PaymentGateway\PaymentGatewayInterface:
+            tags: ['app.payment_gateway']
+
+    # Autoload all services in src/PaymentGateway/
+    App\PaymentGateway\:
+        resource: '../src/PaymentGateway/'
+        # Exclude abstract classes if any
+        exclude: '../src/PaymentGateway/AbstractPaymentGateway.php'
+
+    # Explicitly define Shift4Gateway service with injected parameters
+    App\PaymentGateway\Shift4Gateway:
+        arguments:
+            $client: '@http_client'
+            $baseUrl: '%shift4.base_url%'
+            $apiKey: '%shift4.api_key%'
+        tags: ['app.payment_gateway']
+
+    # Explicitly define ACIGateway service with injected parameters
+    App\PaymentGateway\ACIGateway:
+        arguments:
+            $client: '@http_client'
+            $logger: '@logger'
+            $entityId: '%aci.entity_id%'
+            $apiKey: '%aci.api_key%'
+        tags: ['app.payment_gateway']
+
+    # Explicitly define PaymentProcessor and inject tagged services
+    App\Service\PaymentProcessor:
+        arguments:
+            $gateways: !tagged_iterator app.payment_gateway
