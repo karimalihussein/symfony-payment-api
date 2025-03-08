@@ -20,7 +20,7 @@ Ensure you have the following installed:
 
 ---
 
-### � **Running the Project Using Docker**
+### 🐳 Running the Project Using Docker
 
 #### Steps to Run the Project
 
@@ -49,7 +49,7 @@ docker ps
 
 ---
 
-### 🖥 **Running the Project Without Docker**
+### 🖥 Running the Project Without Docker
 
 #### Steps to Run the Project
 
